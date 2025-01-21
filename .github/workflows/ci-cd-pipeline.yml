@@ -4,32 +4,41 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Check out the code
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
-          go-version: '1.19'  # You can use any Go version you prefer
+          go-version: '1.18'
+
+      - name: Cache Go modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/*.go') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
 
       - name: Install dependencies
         run: go mod tidy
 
       - name: Run tests
-        run: go test
+        run: go test -v ./...
 
-      - name: Run static analysis with GolangCI-Lint
-        run: |
-          curl -sSfL https://github.com/golangci/golangci-lint/releases/download/v1.50.1/golangci-lint-1.50.1-linux-amd64.tar.gz | tar -xzv
-          mv golangci-lint-1.50.1-linux-amd64/golangci-lint /usr/local/bin
-          golangci-lint run
+      - name: Build application
+        run: go build -v .
 
-      - name: Run dynamic analysis with OWASP ZAP
-        run: |
-          docker run -u 0 -v $PWD:/zap/wrk/:rw owasp/zap2docker-stable zap-baseline.py -t http://localhost:8080
+      - name: Static analysis with GoLint
+        run: go run golang.org/x/lint/golint ./...
+
+      - name: Dynamic analysis with GoSec
+        run: gosec ./...
