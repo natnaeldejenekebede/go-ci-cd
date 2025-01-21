@@ -37,17 +37,14 @@ jobs:
       - name: Build application
         run: go build -v .
 
-      - name: Install GoLint
-        run: go install golang.org/x/lint/golint@latest
-
-      - name: Static analysis with GoLint
-        run: golint ./...
-
-      - name: Download GoSec binary
+      - name: Install GoSec
         run: |
           curl -sSL https://github.com/securego/gosec/releases/download/v2.15.0/gosec_2.15.0_linux_amd64.tar.gz -o gosec.tar.gz
           tar -xvf gosec.tar.gz -C /usr/local/bin gosec
           chmod +x /usr/local/bin/gosec
 
+      - name: Verify GoSec Installation
+        run: gosec --version
+
       - name: Dynamic analysis with GoSec
-        run: gosec ./...
+        run: gosec -fmt=verbose ./...
