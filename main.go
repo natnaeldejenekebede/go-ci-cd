@@ -1,15 +1,24 @@
 package main
 
 import (
-    "fmt"
+    "log"
     "net/http"
+    "time"
 )
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprintf(w, "Hello, world!")
+    w.Write([]byte("Hello, World!"))
 }
 
 func main() {
     http.HandleFunc("/", helloHandler)
-    http.ListenAndServe(":8080", nil)
+
+    server := &http.Server{
+        Addr:         ":8080",
+        Handler:      nil,
+        ReadTimeout:  5 * time.Second,
+        WriteTimeout: 10 * time.Second,
+    }
+
+    log.Fatal(server.ListenAndServe())
 }
