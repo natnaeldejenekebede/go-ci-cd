@@ -1,27 +1,31 @@
 package main
 
 import (
-    "net/http"
-    "net/http/httptest"
-    "testing"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
+// TestHelloHandler checks if the helloHandler responds with the correct message.
 func TestHelloHandler(t *testing.T) {
-    req, err := http.NewRequest("GET", "/", nil)
-    if err != nil {
-        t.Fatal(err)
-    }
+	req, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 
-    rr := httptest.NewRecorder()
-    handler := http.HandlerFunc(helloHandler)
-    handler.ServeHTTP(rr, req)
+	// Record the response.
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(helloHandler)
+	handler.ServeHTTP(rr, req)
 
-    if rr.Code != http.StatusOK {
-        t.Errorf("expected status code 200, got %d", rr.Code)
-    }
+	// Check the status code.
+	if status := rr.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+	}
 
-    expected := "Hello, world!"
-    if rr.Body.String() != expected {
-        t.Errorf("expected body %s, got %s", expected, rr.Body.String())
-    }
+	// Check the response body.
+	expected := "Hello, World!\n"
+	if rr.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+	}
 }
