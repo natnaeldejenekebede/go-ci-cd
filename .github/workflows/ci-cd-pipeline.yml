@@ -13,18 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: '1.18'
 
       - name: Cache Go modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
-          path: ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/*.go') }}
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
 
@@ -37,8 +37,14 @@ jobs:
       - name: Build application
         run: go build -v .
 
+      - name: Install GoLint
+        run: go install golang.org/x/lint/golint@latest
+
       - name: Static analysis with GoLint
-        run: go run golang.org/x/lint/golint ./...
+        run: golint ./...
+
+      - name: Install GoSec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: Dynamic analysis with GoSec
         run: gosec ./...
