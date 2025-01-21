@@ -1,24 +1,19 @@
 package main
 
 import (
-    "log"
-    "net/http"
-    "time"
+	"fmt"
+	"net/http"
 )
 
+// helloHandler handles HTTP requests and responds with a greeting message.
 func helloHandler(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte("Hello, World!"))
+	fmt.Fprintln(w, "Hello, World!")
 }
 
 func main() {
-    http.HandleFunc("/", helloHandler)
-
-    server := &http.Server{
-        Addr:         ":8080",
-        Handler:      nil,
-        ReadTimeout:  5 * time.Second,
-        WriteTimeout: 10 * time.Second,
-    }
-
-    log.Fatal(server.ListenAndServe())
+	http.HandleFunc("/", helloHandler)
+	// Use http.ListenAndServe to start the HTTP server on port 8080
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		fmt.Printf("Error starting server: %v\n", err)
+	}
 }
