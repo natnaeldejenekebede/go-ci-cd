@@ -34,6 +34,15 @@ jobs:
       - name: Run tests
         run: go test -v ./...
 
+      - name: Generate test coverage
+        run: go test -coverprofile=coverage.out ./...
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.out
+
       - name: Build application
         run: go build -v .
 
@@ -46,5 +55,15 @@ jobs:
       - name: Verify GoSec Installation
         run: gosec --version
 
-      - name: Dynamic analysis with GoSec
+      - name: Run static analysis with GoSec
         run: gosec -fmt=verbose ./...
+
+      - name: Start Application
+        run: |
+          go run main.go &
+          sleep 10
+
+      - name: OWASP ZAP Security Scan
+        uses: zaproxy/action-full-scan@v0.6.0
+        with:
+          target: 'http://localhost:8080'
