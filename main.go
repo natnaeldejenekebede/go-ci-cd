@@ -21,9 +21,13 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 // hiddenFileMiddleware blocks access to hidden files.
 func hiddenFileMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, ".") {
-			http.Error(w, "403 Forbidden", http.StatusForbidden)
-			return
+		// Check if the URL path contains hidden files (e.g., /.git or /.env)
+		pathSegments := strings.Split(r.URL.Path, "/")
+		for _, segment := range pathSegments {
+			if strings.HasPrefix(segment, ".") {
+				http.Error(w, "403 Forbidden", http.StatusForbidden)
+				return
+			}
 		}
 		next.ServeHTTP(w, r)
 	})
