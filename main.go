@@ -11,6 +11,7 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
 	w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, "Hello, World!")
 }
 
@@ -29,6 +30,16 @@ func hiddenFileMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func securityHeadersMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add security headers to all responses
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+		w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func contains(slice []string, item string) bool {
 	for _, v := range slice {
 		if v == item {
@@ -42,8 +53,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", helloHandler)
 
-	// Wrap the handler with the hidden file middleware
-	handler := hiddenFileMiddleware(mux)
+	// Apply middleware
+	handler := hiddenFileMiddleware(securityHeadersMiddleware(mux))
 
 	server := &http.Server{
 		Addr:           ":8080",
