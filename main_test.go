@@ -44,25 +44,33 @@ func TestHelloHandler(t *testing.T) {
 
 // TestHiddenFileMiddleware checks if the middleware blocks access to hidden files.
 func TestHiddenFileMiddleware(t *testing.T) {
-	req, err := http.NewRequest("GET", "/.git", nil)
-	if err != nil {
-		t.Fatal(err)
+	hiddenPaths := []string{
+		"/.git",
+		"/.env",
+		"/folder/.hidden",
 	}
 
-	// Record the response.
-	rr := httptest.NewRecorder()
+	for _, path := range hiddenPaths {
+		req, err := http.NewRequest("GET", path, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-	// Create a dummy handler to test the middleware
-	dummyHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+		// Record the response.
+		rr := httptest.NewRecorder()
 
-	// Wrap the dummy handler with the hidden file middleware
-	handler := hiddenFileMiddleware(dummyHandler)
-	handler.ServeHTTP(rr, req)
+		// Create a dummy handler to test the middleware
+		dummyHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+		})
 
-	// Check the status code.
-	if status := rr.Code; status != http.StatusForbidden {
-		t.Errorf("middleware did not block hidden file access: got %v want %v", status, http.StatusForbidden)
+		// Wrap the dummy handler with the hidden file middleware
+		handler := hiddenFileMiddleware(dummyHandler)
+		handler.ServeHTTP(rr, req)
+
+		// Check the status code.
+		if status := rr.Code; status != http.StatusForbidden {
+			t.Errorf("middleware did not block hidden file access for path %s: got %v want %v", path, status, http.StatusForbidden)
+		}
 	}
 }
