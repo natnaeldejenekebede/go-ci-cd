@@ -7,24 +7,20 @@ import (
 	"time"
 )
 
-// helloHandler handles HTTP requests and responds with a greeting message.
 func helloHandler(w http.ResponseWriter, r *http.Request) {
-	// Set security headers
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
 	w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
-
-	// Respond with a greeting message
 	fmt.Fprintln(w, "Hello, World!")
 }
 
-// hiddenFileMiddleware blocks access to hidden files.
 func hiddenFileMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check if the URL path contains hidden files (e.g., /.git or /.env)
+		// Block hidden files and specific filenames
+		blockedFiles := []string{"BitKeeper", ".git", ".env"}
 		pathSegments := strings.Split(r.URL.Path, "/")
 		for _, segment := range pathSegments {
-			if strings.HasPrefix(segment, ".") {
+			if strings.HasPrefix(segment, ".") || contains(blockedFiles, segment) {
 				http.Error(w, "403 Forbidden", http.StatusForbidden)
 				return
 			}
@@ -33,24 +29,30 @@ func hiddenFileMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func contains(slice []string, item string) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
-	// Use a custom handler with security headers and hidden file blocking
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", helloHandler)
 
 	// Wrap the handler with the hidden file middleware
 	handler := hiddenFileMiddleware(mux)
 
-	// Create a custom server with timeouts
 	server := &http.Server{
 		Addr:           ":8080",
 		Handler:        handler,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20, // 1MB max header size
+		MaxHeaderBytes: 1 << 20,
 	}
 
-	// Start the HTTP server
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Printf("Error starting server: %v\n", err)
 	}
