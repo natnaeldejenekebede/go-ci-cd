@@ -58,7 +58,7 @@ func main() {
 	handler := hiddenFileMiddleware(securityHeadersMiddleware(mux))
 
 	server := &http.Server{
-		Addr:           ":8080",
+		Addr:           ":8090",
 		Handler:        handler,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
