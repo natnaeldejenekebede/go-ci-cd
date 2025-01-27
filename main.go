@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"strings"
 	"time"
-	"lgo"
 )
 
 func helloHandler(w http.ResponseWriter, r *http.Request) {
